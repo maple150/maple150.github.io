@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>👻 恐怖海龟汤主持人</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e6e6e6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 30px; padding: 20px; background: rgba(0,0,0,0.3); border-radius: 15px; border: 1px solid #ff6b6b; }
+        h1 { font-size: 2.5em; margin-bottom: 10px; color: #ff6b6b; text-shadow: 0 0 10px rgba(255,107,107,0.5); }
+        .subtitle { font-size: 1.1em; opacity: 0.8; line-height: 1.6; }
+        .rules { background: rgba(255,107,107,0.1); border: 1px solid #ff6b6b; border-radius: 10px; padding: 15px; margin: 20px 0; font-size: 0.9em; }
+        .rules h3 { color: #ff6b6b; margin-bottom: 8px; }
+        .rules ul { padding-left: 20px; }
+        .rules li { margin: 5px 0; }
+        #chat { height: 400px; background: rgba(0,0,0,0.4); border: 1px solid #4ecdc4; border-radius: 15px; padding: 20px; overflow-y: auto; margin-bottom: 20px; box-shadow: 0 0 20px rgba(78,205,196,0.2); }
+        .message { margin-bottom: 15px; padding: 10px; border-radius: 10px; max-width: 80%; word-wrap: break-word; line-height: 1.5; }
+        .user-message { background: rgba(78,205,196,0.2); margin-left: auto; border-left: 3px solid #4ecdc4; }
+        .ai-message { background: rgba(255,107,107,0.2); margin-right: auto; border-right: 3px solid #ff6b6b; }
+        .message strong { display: block; margin-bottom: 5px; color: #4ecdc4; }
+        .ai-message strong { color: #ff6b6b; }
+        .input-area { display: flex; gap: 10px; }
+        #userInput { flex: 1; padding: 15px; border: 2px solid #4ecdc4; border-radius: 25px; background: rgba(0,0,0,0.3); color: white; font-size: 16px; outline: none; }
+        #userInput::placeholder { color: #666; }
+        #userInput:focus { border-color: #ff6b6b; box-shadow: 0 0 10px rgba(255,107,107,0.3); }
+        button { padding: 15px 25px; background: linear-gradient(45deg, #ff6b6b, #ff8e8e); color: white; border: none; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; transition: all 0.3s ease; }
+        button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255,107,107,0.4); }
+        .loading { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #ff6b6b; animation: spin 1s ease-in-out infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        footer { text-align: center; margin-top: 30px; padding: 20px; color: #666; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>👻 恐怖海龟汤主持人</h1>
+            <p class="subtitle">说出"开始游戏"，挑战你的推理极限！</p>
+        </header>
+        
+        <div class="rules">
+            <h3>🎮 游戏规则：</h3>
+            <ul>
+                <li>输入 <strong>"开始游戏"</strong> 启动游戏</li>
+                <li>只能问 <strong>"是否..."</strong> 的问题</li>
+                <li>输入 <strong>"提示"</strong> 获取非剧透线索</li>
+                <li>AI 会回答："是"、"不是"、"可能是"等 + 真相进度百分比</li>
+            </ul>
+        </div>
+        
+        <div id="chat">
+            <div class="message ai-message">
+                <strong>主持人：</strong>你好！我是恐怖海龟汤主持人。输入"开始游戏"来挑战吧！[接近真相：0%]
+            </div>
+        </div>
+        
+        <div class="input-area">
+            <input type="text" id="userInput" placeholder="例如：开始游戏 / 是否发生在医院？">
+            <button onclick="sendMessage()">发送</button>
+        </div>
+        
+        <footer>
+            <p>Powered by Qwen-Max • 完全免费游玩</p>
+        </footer>
+    </div>
+
+    <script>
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+            if (!message) return;
+            
+            addMessage("你", message, "user");
+            input.value = '';
+            
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'message ai-message';
+            loadingDiv.innerHTML = '<strong>主持人：</strong><span class="loading"></span>';
+            document.getElementById('chat').appendChild(loadingDiv);
+            scrollToBottom();
+            
+            try {
+                const response = await fetch('/api/ai', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
+                });
+                
+                document.getElementById('chat').removeChild(loadingDiv);
+                
+                if (!response.ok) throw new Error('服务暂时不可用');
+                
+                const data = await response.json();
+                addMessage("主持人", data.content, "ai");
+                
+            } catch (error) {
+                if (document.getElementById('chat').contains(loadingDiv)) {
+                    document.getElementById('chat').removeChild(loadingDiv);
+                }
+                addMessage("主持人", "抱歉，服务暂时不可用，请稍后再试。[接近真相：0%]", "ai");
+            }
+        }
+        
+        function addMessage(sender, text, type) {
+            const chat = document.getElementById('chat');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}-message`;
+            messageDiv.innerHTML = `<strong>${sender}：</strong>${text}`;
+            chat.appendChild(messageDiv);
+            scrollToBottom();
+        }
+        
+        function scrollToBottom() {
+            const chat = document.getElementById('chat');
+            chat.scrollTop = chat.scrollHeight;
+        }
+        
+        document.getElementById('userInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
+</body>
+</html>
