@@ -13,7 +13,7 @@
     <h1>👻 恐怖海龟汤主持人</h1>
     <div id="chat"></div>
     <input type="text" id="userInput" placeholder="输入'开始游戏'...">
-    <button onclick="sendMessage()">发送</button>
+    <button onclick="sendMessage()">发送</button>a
 
     <script>
         async function sendMessage() {
@@ -29,7 +29,7 @@
             const response = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation', {
                 method: 'POST',
                 headers: {
-                    'Authorization': 'Bearer sk-f8b94845b3ed441eb6d522635a06b287',
+                    'Authorization': 'Bearer sk-6533c949f54f4a088680624b03c16b4c',
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
@@ -53,4 +53,5 @@
         }
     </script>
 </body>
+
 </html>
